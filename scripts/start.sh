@@ -13,16 +13,21 @@ FB_DB="/workspace/runpod-slim/filebrowser.db"
 log() { echo "[homelab-kompass] $*"; }
 
 generate_secret() {
+    # Official ComfyUI start requires COMFYUI_PASSWORD of at least 12 characters.
+    local len="${1:-20}"
+    local secret=""
     if command -v openssl >/dev/null 2>&1; then
-        openssl rand -base64 24 | tr -d '/+=' | head -c 24
+        secret="$(openssl rand -base64 48 | tr -d '/+=' | tr -d '\n' | cut -c1-"${len}")"
     else
-        tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24
+        secret="$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c "${len}" || true)"
     fi
+    printf '%s' "${secret}"
 }
 
 # --- Passwords: never write these to a file under /workspace (FileBrowser root).
 GENERATED_FB=0
 GENERATED_JP=0
+GENERATED_CU=0
 if [[ -z "${FILEBROWSER_PASSWORD:-}" ]]; then
     FILEBROWSER_PASSWORD="$(generate_secret)"
     export FILEBROWSER_PASSWORD
@@ -32,6 +37,20 @@ if [[ -z "${JUPYTER_PASSWORD:-}" ]]; then
     JUPYTER_PASSWORD="$(generate_secret)"
     export JUPYTER_PASSWORD
     GENERATED_JP=1
+fi
+# Official /start.sh will not start ComfyUI unless COMFYUI_PASSWORD is set
+# and at least 12 characters long.
+if [[ -z "${COMFYUI_PASSWORD:-}" ]]; then
+    COMFYUI_PASSWORD="$(generate_secret)"
+    export COMFYUI_PASSWORD
+    GENERATED_CU=1
+elif [[ ${#COMFYUI_PASSWORD} -lt 12 ]]; then
+    log "COMFYUI_PASSWORD is shorter than 12 characters; the official start script would not start ComfyUI. Generating a new password."
+    COMFYUI_PASSWORD="$(generate_secret)"
+    export COMFYUI_PASSWORD
+    GENERATED_CU=1
+else
+    export COMFYUI_PASSWORD
 fi
 
 mkdir -p "${HK_WS}" /workspace
@@ -61,7 +80,7 @@ echo " Homelab-Kompass ComfyUI Starter DE/EN"
 echo " Author: Michael Weidinger  |  https://homelab-kompass.pages.dev"
 echo "----------------------------------------------------------------"
 echo " Ports:"
-echo "   8188  ComfyUI     — no login on the Runpod proxy URL. Do not share it."
+echo "   8188  ComfyUI     — browser login, password below. Do not share the link."
 echo "   8080  FileBrowser — user: admin"
 echo "   8888  JupyterLab  — token/password below"
 echo "   22    SSH         — set PUBLIC_KEY if you need it"
@@ -81,6 +100,11 @@ if [[ "${GENERATED_JP}" -eq 1 ]]; then
     echo " JupyterLab token (generated for this start): ${JUPYTER_PASSWORD}"
 else
     echo " JupyterLab token: using JUPYTER_PASSWORD from the environment"
+fi
+if [[ "${GENERATED_CU}" -eq 1 ]]; then
+    echo " ComfyUI password (generated for this start): ${COMFYUI_PASSWORD}"
+else
+    echo " ComfyUI password: using COMFYUI_PASSWORD from the environment"
 fi
 echo " Workspace docs: ${HK_WS}"
 echo " Models dir:     ${COMFYUI_DIR}/models"

@@ -11,7 +11,7 @@ LABEL org.opencontainers.image.title="Homelab-Kompass ComfyUI Starter DE/EN" \
       org.opencontainers.image.source="https://github.com/homelab-kompass/runpod-comfyui-starter" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.authors="Michael Weidinger / Homelab-Kompass" \
-      org.opencontainers.image.version="0.1.0"
+      org.opencontainers.image.version="0.1.1"
 
 USER root
 

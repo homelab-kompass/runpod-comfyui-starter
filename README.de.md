@@ -11,9 +11,9 @@ Dieses Image enthält **keine Modellgewichte**.
 
 1. Dieses Template ist die **CUDA-12.8-Variante**, passend für typische Karten wie die RTX 4090. Für RTX 5090 / Blackwell brauchst du später die CUDA-13-Variante (noch nicht veröffentlicht).
 2. Lege in Runpod eine GPU-Cloud-Instanz mit diesem Template an. Empfohlen: Container-Disk 150 GB, Volume 80 GB unter `/workspace`. Für wiederholte Nutzung ein Netzwerk-Volume in der Secure Cloud anhängen.
-3. Setze vor dem Start, wenn du die Werte selbst festlegen willst, `JUPYTER_PASSWORD` und `FILEBROWSER_PASSWORD`. Wenn du sie leer lässt, erzeugt der Start ein Zufallspasswort und schreibt es **nur in die Pod-Logs**.
-4. Nach dem Start die Logs prüfen, bis ComfyUI bereit ist (das kann beim ersten Start einige Minuten dauern). Dann **Connect → Port 8188**.
-5. Port **8188 ist über die Proxy-URL ohne Anmeldung erreichbar** — den Link nicht öffentlich teilen.
+3. Setze vor dem Start, wenn du die Werte selbst festlegen willst, `COMFYUI_PASSWORD`, `JUPYTER_PASSWORD` und `FILEBROWSER_PASSWORD`. Wenn du sie leer lässt, erzeugt der Start Zufallspasswörter (mindestens 12 Zeichen, typisch 20) und schreibt sie **nur in die Pod-Logs**. Ohne `COMFYUI_PASSWORD` startet ComfyUI im offiziellen Basisskript nicht.
+4. Nach dem Start die Logs prüfen, bis ComfyUI bereit ist (das kann beim ersten Start einige Minuten dauern). Dann **Connect → Port 8188** und das ComfyUI-Passwort eingeben.
+5. Port **8188 verlangt das ComfyUI-Passwort** im Browser. Den Link trotzdem nicht öffentlich teilen.
 6. Einen Starter-Workflow öffnen, zum Beispiel „SDXL-Turbo“. Modelle bei Bedarf laden:
    ```bash
    /workspace/homelab-kompass/download_models.sh sdxl-turbo
@@ -25,7 +25,7 @@ Dieses Image enthält **keine Modellgewichte**.
 
 | Port | Protokoll | Dienst | Hinweis |
 | --- | --- | --- | --- |
-| 8188 | HTTP | ComfyUI | Keine Anmeldung an der Proxy-URL |
+| 8188 | HTTP | ComfyUI | Browser-Login, Passwort aus Env oder Logs |
 | 8080 | HTTP | FileBrowser | Benutzer `admin`, Passwort aus Env oder Logs |
 | 8888 | HTTP | JupyterLab | Token aus Env oder Logs |
 | 22 | TCP | SSH | Optional, `PUBLIC_KEY` setzen |
@@ -38,6 +38,7 @@ ComfyUI selbst liegt im offiziellen Image unter `/workspace/runpod-slim/ComfyUI`
 
 | Variable | Pflicht | Bedeutung |
 | --- | --- | --- |
+| `COMFYUI_PASSWORD` | empfohlen | Passwort für die ComfyUI-Oberfläche (mindestens 12 Zeichen); sonst generiert `start.sh` einen 20-Zeichen-Wert und schreibt ihn in die Logs. Ohne dieses Passwort startet ComfyUI nicht. |
 | `JUPYTER_PASSWORD` | empfohlen | Jupyter-Token; sonst generiert `start.sh` einen Wert und schreibt ihn in die Logs |
 | `FILEBROWSER_PASSWORD` | empfohlen | FileBrowser-Passwort; sonst generiert (greift nur, wenn noch keine FileBrowser-Datenbank auf dem Volume liegt) |
 | `MODELS` oder `HK_DOWNLOAD_MODELS` | nein | Kommagetrennte Aliase, z. B. `sdxl-turbo` oder `flux-schnell,sdxl`. Leer = kein Automatik-Download |

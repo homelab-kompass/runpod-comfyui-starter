@@ -11,9 +11,9 @@ This image ships **without model weights**.
 
 1. This template is the **CUDA 12.8** variant, for cards such as the RTX 4090. A CUDA 13 variant for RTX 5090 / Blackwell is not published yet.
 2. Deploy a GPU pod from this template. Recommended: 150 GB container disk, 80 GB volume at `/workspace`. For repeated use, attach a Secure Cloud network volume.
-3. Set `JUPYTER_PASSWORD` and `FILEBROWSER_PASSWORD` before you deploy if you want chosen values. If you leave them empty, the entrypoint generates random secrets and prints them **only in the pod logs**.
-4. Watch the logs until ComfyUI is ready (first boot can take several minutes). Then **Connect → port 8188**.
-5. Port **8188 is unauthenticated on the proxy URL** — do not share the link.
+3. Set `COMFYUI_PASSWORD`, `JUPYTER_PASSWORD` and `FILEBROWSER_PASSWORD` before you deploy if you want chosen values. If you leave them empty, the entrypoint generates random secrets (at least 12 characters, typically 20) and prints them **only in the pod logs**. The official start script will not start ComfyUI without `COMFYUI_PASSWORD`.
+4. Watch the logs until ComfyUI is ready (first boot can take several minutes). Then **Connect → port 8188** and enter the ComfyUI password.
+5. Port **8188 requires the ComfyUI password** in the browser. Still do not share the link.
 6. Open a starter workflow, for example SDXL-Turbo. Download weights when you need them:
    ```bash
    /workspace/homelab-kompass/download_models.sh sdxl-turbo
@@ -25,7 +25,7 @@ This image ships **without model weights**.
 
 | Port | Protocol | Service | Notes |
 | --- | --- | --- | --- |
-| 8188 | HTTP | ComfyUI | No login on the proxy URL |
+| 8188 | HTTP | ComfyUI | Browser login; password from env or logs |
 | 8080 | HTTP | FileBrowser | User `admin`, password from env or logs |
 | 8888 | HTTP | JupyterLab | Token from env or logs |
 | 22 | TCP | SSH | Optional; set `PUBLIC_KEY` |
@@ -38,6 +38,7 @@ ComfyUI lives at `/workspace/runpod-slim/ComfyUI` in the official image (not `/w
 
 | Variable | Required | Meaning |
 | --- | --- | --- |
+| `COMFYUI_PASSWORD` | recommended | Password for the ComfyUI UI (at least 12 characters); otherwise `start.sh` generates a 20-character value and prints it to the logs. ComfyUI will not start without this password. |
 | `JUPYTER_PASSWORD` | recommended | Jupyter token; otherwise generated and printed to the logs |
 | `FILEBROWSER_PASSWORD` | recommended | FileBrowser password; generated if unset (only applied when no FileBrowser database exists on the volume yet) |
 | `MODELS` or `HK_DOWNLOAD_MODELS` | no | Comma-separated aliases, e.g. `sdxl-turbo` or `flux-schnell,sdxl`. Empty = no automatic download |
